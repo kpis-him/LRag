@@ -107,9 +107,3 @@ Deployed and iteratively improved with real-world use case feedback.
 
 Open-source under the MIT License. See [LICENSE](LICENSE) for details.
 
-```
-
----
-
-Let me know your model's exact framework (e.g. `transformers`, `langchain`, `llama-cpp`), and I can tailor this further. Want help writing the `requirements.txt` too?
-```
