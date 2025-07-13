@@ -1,0 +1,17 @@
+Create your own RAG pipeline and model:
+
+1) Install required libraries in requirements.txt
+
+2) Get your knowledgebase, compile it into a csv or txt file with Question answer format, look at parsing.csv for more details about how the file should look
+
+3) Choose a sentence transformer, I chose MiniLM
+
+4) FAISS(Facebook AI Similarity Search) is used with RAGs to be able to generate vector databases that are used to choose the best QnA pair, a pkl file is also generated to help the faiss go through smoothly by storing serialized Python objects like dictionaries, lists etc
+
+5) Pull the original model from huggingface, i chose Norquinal/Mistral-Claude-Chat
+
+6) download the index.faiss, pkl, and your knowledgebase and use llama.cpp
+
+7) llama.cpp has a convert_to_gguf_hf.py file
+
+8) Convert and run it!

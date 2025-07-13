@@ -1,0 +1,119 @@
+import os
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_community.llms import LlamaCpp
+from langchain.chains import RetrievalQA
+from langchain.callbacks.manager import CallbackManager
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.prompts import PromptTemplate
+
+# --- Configuration ---
+# Path to the directory containing index.faiss and index.pkl
+FAISS_INDEX_PATH = "/home/spwifi/co-lab-files"
+# This must be the SAME embedding model used to create the FAISS index
+EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
+
+# Path to your downloaded Mistral GGUF model
+MISTRAL_GGUF_MODEL_PATH = "/root/llama.cpp/build/bin/models/co-lab-files/my_mistral_gguf_model/mistral-7b-claude-chat.Q4_K_M.gguf"
+
+# LLM parameters
+LLM_TEMPERATURE = 0.7
+LLM_MAX_TOKENS = 3000
+LLM_N_CTX = 32768 # Match the model's context length
+LLM_N_GPU_LAYERS = 0 # Adjust if you have a GPU, e.g., 30 for most layers.
+
+# RAG Retrieval parameters
+RETRIEVAL_TOP_K = 5 # Number of relevant chunks to retrieve
+
+# --- 1. Load the Embedding Model ---
+# This must be the same embedding model used when you initially created the FAISS index
+embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
+print(f"Embedding model '{EMBEDDING_MODEL_NAME}' loaded.")
+
+# --- 2. Load the FAISS Index ---
+if not os.path.exists(FAISS_INDEX_PATH) or \
+   not os.path.exists(os.path.join(FAISS_INDEX_PATH, "index.faiss")) or \
+   not os.path.exists(os.path.join(FAISS_INDEX_PATH, "index.pkl")):
+    print(f"Error: FAISS index not found at '{FAISS_INDEX_PATH}'.")
+    print("Please ensure '{FAISS_INDEX_PATH}' directory contains 'index.faiss' and 'index.pkl'.")
+    exit()
+
+# Load the FAISS vector store
+# allow_dangerous_deserialization=True is often needed for FAISS .pkl files
+# Note: Langchain has updated module paths. Use langchain_community.vectorstores.FAISS
+vectorstore = FAISS.load_local(FAISS_INDEX_PATH, embeddings, allow_dangerous_deserialization=True)
+print(f"FAISS index loaded from '{FAISS_INDEX_PATH}'.")
+
+# Create a retriever
+retriever = vectorstore.as_retriever(search_kwargs={"k": RETRIEVAL_TOP_K})
+print(f"Retriever set to fetch top {RETRIEVAL_TOP_K} documents.")
+
+# --- 3. Load your Mistral GGUF Model with llama-cpp-python ---
+print(f"Loading LLM from: {MISTRAL_GGUF_MODEL_PATH}")
+callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
+
+llm = LlamaCpp(
+    model_path=MISTRAL_GGUF_MODEL_PATH,
+    temperature=LLM_TEMPERATURE,
+    max_tokens=LLM_MAX_TOKENS,
+    n_ctx=LLM_N_CTX,
+    n_gpu_layers=LLM_N_GPU_LAYERS,
+    callback_manager=callback_manager,
+    verbose=True, # Set to False for less verbose llama.cpp output
+)
+print("Mistral GGUF LLM loaded.")
+
+# --- 4. Define the RAG Prompt Template ---
+# This is crucial for guiding the LLM to use the context
+template = """Use the following pieces of context to answer the user's question.
+If you don't know the answer, just say that you don't know, don't try to make up an answer.
+
+Context:
+{context}
+
+Question: {question}
+Answer:"""
+
+RAG_PROMPT = PromptTemplate(
+    template=template,
+    input_variables=["context", "question"]
+)
+
+# --- 5. Create the RetrievalQA Chain ---
+qa_chain = RetrievalQA.from_chain_type(
+    llm=llm,
+    chain_type="stuff", # "stuff" puts all retrieved documents into the prompt
+    retriever=retriever,
+    return_source_documents=True, # This will return the actual chunks retrieved
+    chain_type_kwargs={"prompt": RAG_PROMPT}
+)
+print("RAG chain initialized.")
+
+# --- 6. Query your RAG System ---
+while True:
+    user_query = input("\nEnter your query (or 'quit' to exit): ")
+    if user_query.lower() == 'quit':
+        break
+
+    print("\n--- Generating Response ---")
+    try:
+        response = qa_chain.invoke({"query": user_query})
+
+        print("\nGenerated Answer:")
+        print(response["result"])
+
+        if response.get("source_documents"):
+            print("\n--- Source Documents (Context used for generation) ---")
+            for i, doc in enumerate(response["source_documents"]):
+                print(f"\nDocument {i+1}:")
+                print(f"  Source: {doc.metadata.get('source', 'N/A')}")
+                if doc.metadata.get('page'):
+                    print(f"  Page: {doc.metadata['page']}")
+                print(f"  Content (first 200 chars): {doc.page_content[:200]}...")
+        else:
+            print("\nNo source documents retrieved for this query.")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+print("\nExiting RAG system.")
