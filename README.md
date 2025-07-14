@@ -26,7 +26,7 @@ cd LRag
 Open the notebook:
 
 ```bash
-jupyter notebook notebooks/RAGpipe.ipynb
+jupyter notebook notebooks/RAGmodel.ipynb
 ```
 
 Then follow the cells to:
