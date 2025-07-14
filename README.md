@@ -3,6 +3,9 @@
 
 This project is a **Retrieval-Augmented Generation (RAG)** system using a fine-tuned large language model (LLM) combined with a custom knowledge base and FAISS indexing for fast vector retrieval. It is designed to serve as a domain-specific assistant for internal company use, and is currently being implemented for real user support.
 
+## Note
+This jupyter notebook only contains a generate_answer() method which is NOT a chatbot experience, using llama.cpp would be the preferred next step to create a CLI venv chatot you can use, HuggingFace also provides 'Spaces' where you can host using gradio or streamlit
+
 ## Features
 
 - **Fine-tuned LLM** for custom domain language and task adaptation  
