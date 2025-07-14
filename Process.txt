@@ -1,6 +1,6 @@
 Create your own RAG pipeline and model:
 
-1) Install required libraries in requirements.txt
+1) Install required libraries(hugginface hub, lanchain, sentence_transformers, faiss-cpu etc)
 
 2) Get your knowledgebase, compile it into a csv or txt file with Question answer format, look at parsing.csv for more details about how the file should look
 
