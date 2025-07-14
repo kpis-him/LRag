@@ -3,31 +3,6 @@
 
 This project is a **Retrieval-Augmented Generation (RAG)** system using a fine-tuned large language model (LLM) combined with a custom knowledge base and FAISS indexing for fast vector retrieval. It is designed to serve as a domain-specific assistant for internal company use, and is currently being implemented for real user support.
 
----
-
-## 📂 Project Structure
-
-```
-
-rag-chatbot/
-│
-├── notebooks/
-│   └── rag\_pipeline.ipynb          # Main Jupyter Notebook to run the pipeline
-│
-├── models/
-│   ├── model.pkl                   # Fine-tuned LLM model
-│   └── faiss\_index/               # FAISS vector index of the knowledge base
-│
-├── data/
-│   └── knowledge\_base.txt          # Source knowledge base (docs, notes, FAQs)
-│
-├── requirements.txt                # Required Python packages
-└── README.md                       # You're here!
-
-````
-
----
-
 ## 🚀 Features
 
 - **Fine-tuned LLM** for custom domain language and task adaptation  
