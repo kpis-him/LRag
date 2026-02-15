@@ -4,21 +4,16 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 
-# --- Configuration for Ingestion ---
-# This is the directory where your original source documents (PDFs, TXTs, CSVs) are located.
+
 SOURCE_DOCS_DIR = "/home/spwifi/source_docs"
 
-# This is the directory where LangChain will save the FAISS index files.
-# It will create both 'index.faiss' and 'index.pkl' here, overwriting any old ones.
+
 FAISS_SAVE_PATH = "/home/spwifi/co-lab-files"
 
-# Ensure this embedding model name is EXACTLY the same as the one you use in run_rag.py.
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 
 def create_and_save_langchain_faiss_index():
     print("Starting FAISS index creation and saving process...")
-
-    # 1. Load documents from the source directory
     documents = []
     if not os.path.exists(SOURCE_DOCS_DIR):
         print(f"Error: Source documents directory '{SOURCE_DOCS_DIR}' does not exist.")
@@ -27,15 +22,12 @@ def create_and_save_langchain_faiss_index():
 
     print(f"Loading documents from '{SOURCE_DOCS_DIR}'...")
     try:
-        # Using DirectoryLoader to load all specified file types
-        # You can add more loader_cls for other file types if needed
         pdf_loader = DirectoryLoader(SOURCE_DOCS_DIR, glob="**/*.pdf", loader_cls=PyPDFLoader)
         documents.extend(pdf_loader.load())
 
         txt_loader = DirectoryLoader(SOURCE_DOCS_DIR, glob="**/*.txt", loader_cls=TextLoader)
         documents.extend(txt_loader.load())
 
-        # Added CSVLoader to handle .csv files
         csv_loader = DirectoryLoader(SOURCE_DOCS_DIR, glob="**/*.csv", loader_cls=CSVLoader)
         documents.extend(csv_loader.load())
 
@@ -50,7 +42,6 @@ def create_and_save_langchain_faiss_index():
 
     print(f"Loaded {len(documents)} raw documents.")
 
-    # 2. Split documents into manageable chunks
     print("Splitting documents into chunks...")
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
@@ -59,23 +50,16 @@ def create_and_save_langchain_faiss_index():
     chunks = text_splitter.split_documents(documents)
     print(f"Split into {len(chunks)} text chunks.")
 
-    # 3. Initialize the embedding model
     print(f"Initializing embedding model: '{EMBEDDING_MODEL_NAME}'...")
-    # The LangChainDeprecationWarning is expected here, it's just a warning about future changes.
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
     print("Embedding model initialized.")
 
-    # 4. Create the FAISS vector store from the chunks and embeddings
-    # This is the crucial step where LangChain builds its internal FAISS object,
-    # which includes the raw FAISS index AND the docstore for mapping.
+
     print("Creating LangChain FAISS vector store from document chunks...")
     vectorstore = FAISS.from_documents(chunks, embeddings)
     print(f"LangChain FAISS vector store created with {len(vectorstore.docstore._dict)} documents in docstore.")
 
-    # 5. Save the FAISS vector store locally
-    # This method correctly saves BOTH 'index.faiss' and 'index.pkl'
-    # in a format that 'FAISS.load_local()' can understand.
-    os.makedirs(FAISS_SAVE_PATH, exist_ok=True) # Ensure the save directory exists
+    os.makedirs(FAISS_SAVE_PATH, exist_ok=True) 
     print(f"Saving LangChain FAISS vector store to '{FAISS_SAVE_PATH}'...")
     vectorstore.save_local(FAISS_SAVE_PATH)
     print("FAISS index and docstore saved successfully (both index.faiss and index.pkl are compatible).")
