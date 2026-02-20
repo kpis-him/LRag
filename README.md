@@ -61,7 +61,6 @@ This system is currently being used in an internal capacity by engineers for res
 
 ## Future Work
 
-* Wrap into a Streamlit app for interactive querying
 * Add document upload and indexing UI
 * Explore multilingual retrieval and response generation
 * Expand to other technical domains (e.g., biomedical, manufacturing)
@@ -75,7 +74,7 @@ Deployed and iteratively improved with real-world use case feedback.
 
 ---
 
-## 📜 License
+## License
 
 Open-source under the MIT License. See [LICENSE](LICENSE) for details.
 
